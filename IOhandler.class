@@ -1,0 +1,12 @@
+package Model;
+/**
+ *special tile will be given care in phase 2
+ *
+ */
+
+
+public class StatueT extends Tile{
+    public StatueT(Tile tile){
+        this.colour = tile.colour;
+    }
+}

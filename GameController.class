@@ -1,0 +1,7 @@
+package Model;
+
+public class SimpleTile extends Tile {
+    public SimpleTile(String colour) {
+        this.colour = colour;
+    }
+}

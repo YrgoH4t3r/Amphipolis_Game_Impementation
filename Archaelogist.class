@@ -1,0 +1,56 @@
+package Test;
+
+import Model.*;
+import org.junit.Test;
+import org.junit.Before;
+import static org.junit.Assert.*;
+import java.util.List;
+
+public class GameEngineTest {
+    private GameEngine engine;
+
+    @Before
+    public void setUp() {
+        engine = new GameEngine();
+    }
+
+    @Test
+    public void testGameInitialization() {
+        engine.initializeGame();
+        assertNotNull(engine.getCurrentPlayer());
+        assertEquals(4, engine.getPlayers().size());
+    }
+
+    @Test
+    public void testPlayerTurns() {
+        engine.initializeGame();
+        Player firstPlayer = engine.getCurrentPlayer();
+        engine.nextTurn();
+        Player secondPlayer = engine.getCurrentPlayer();
+        assertNotEquals(firstPlayer, secondPlayer);
+    }
+
+    @Test
+    public void testDrawTiles() {
+        engine.initializeGame();
+        List<Tile> drawn = GameEngine.drawT(4);
+        assertEquals(4, drawn.size());
+    }
+
+    @Test
+    public void testGameNotOverInitially() {
+        engine.initializeGame();
+        assertFalse(engine.getBoard().isGameOver());
+        assertNull(engine.checkWinner());
+    }
+
+    @Test
+    public void testCurrentPlayerCycles() {
+        engine.initializeGame();
+        Player first = engine.getCurrentPlayer();
+        for (int i = 0; i < 4; i++) {
+            engine.nextTurn();
+        }
+        assertEquals(first, engine.getCurrentPlayer());
+    }
+}

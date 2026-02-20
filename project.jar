@@ -1,0 +1,37 @@
+package Model;
+
+
+public class ProgrammerCard implements Charactercard {
+    private String cardName="Programmer";
+    private boolean used = false;
+
+    @Override
+    /*
+      uses the programmer's ability to select an area for a future tile bonus.
+      this ability grants the player a bonus of two tiles from the selected area
+      at the start of their next turn
+
+      @pre player is not null and it is the current player's turn
+     * @pre board is not null
+     * @pre !isUsed()
+     *
+     * @post isUsed is true
+     * @post the player is marked with a delayed action, targeting a selected area on the board
+     */
+    public void useAbility(Player player, Board board) {
+        if (used) {
+            return;
+        }
+        used = true;
+    }
+
+    @Override
+    public boolean isUsed() {
+        return used;
+    }
+
+    @Override
+    public String getCardName() {
+        return cardName;
+    }
+}

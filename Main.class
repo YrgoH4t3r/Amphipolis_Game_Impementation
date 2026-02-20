@@ -1,0 +1,27 @@
+package Model;
+
+/**
+ * abstract base class for all tile types in the game.
+ * each tile has a colour which may affect scoring or placement.
+ *
+ * {@code @invariant} colour is a valid colour string (from : "blue", "red", "green", "yellow")
+ */
+public abstract class Tile {
+
+    protected String colour;
+
+    /**
+     * returns the colour of the tile
+     *
+     * @return the colour string
+     * @pre true
+     * @post returns the 'colour' field
+     */
+    public String getColour() {
+        return this.colour;
+    }
+
+    public void setColour(String colour) {
+        this.colour = colour;
+    }
+}

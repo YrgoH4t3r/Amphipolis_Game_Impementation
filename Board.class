@@ -1,0 +1,789 @@
+package View;
+
+import Controller.GameController;
+import Model.*;
+import javax.swing.*;
+import javax.swing.border.*;
+import java.awt.*;
+import java.util.List;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+import javax.imageio.ImageIO;
+import java.io.File;
+import java.io.IOException;
+
+/**
+ * will be used to display all graphics and game state information to the user
+ * this class represents the main UI component in the MVC patter
+ *
+ * @invariant all displayed elements accurately reflect the current state of the game
+ */
+public class Screen extends JFrame {
+    private JTextArea gameInfoArea;
+    private JPanel boardPanel;
+    private JPanel currentPlayerInfoPanel;
+    private JLabel currentPlayerLabel;
+    private JLabel messageLabel;
+
+    private JPanel topLeftArea;
+    private JPanel topRightArea;
+    private JPanel bottomLeftArea;
+    private JPanel bottomRightArea;
+    private JPanel centerArea;
+
+    private JPanel characterCardsPanel;
+    private JFrame characterCardsWindow;
+
+    private Map<String, ImageIcon> tileImages;
+    private Map<String, ImageIcon> characterImages;
+    private ImageIcon backgroundImage;
+
+    private static final String IMAGE_PATH = "project_assets/images/";
+    private static final String MUSIC_PATH = "project_assets/music/";
+
+    private GameController gameController;
+
+    public void setGameController(GameController controller) {
+        this.gameController = controller;
+    }
+
+
+    /**
+     * initialazations
+     */
+    public Screen() {
+        loadImages();
+        initializeUI();
+        createCharacterCardsWindow();
+    }
+    /**
+     * loads the images
+     *
+     */
+    private void loadImages() {
+        tileImages = new HashMap<>();
+        characterImages = new HashMap<>();
+
+
+
+        try {
+            tileImages.put("amphora_blue", loadImage("amphora_blue.png", 70, 70));
+            tileImages.put("amphora_brown", loadImage("amphora_brown.png", 70, 70));
+            tileImages.put("amphora_green", loadImage("amphora_green.png", 70, 70));
+            tileImages.put("amphora_purple", loadImage("amphora_purple.png", 70, 70));
+            tileImages.put("amphora_red", loadImage("amphora_red.png", 70, 70));
+            tileImages.put("amphora_yellow", loadImage("amphora_yellow.png", 70, 70));
+
+            tileImages.put("mosaic_green", loadImage("mosaic_green.png", 70, 70));
+            tileImages.put("mosaic_red", loadImage("mosaic_red.png", 70, 70));
+            tileImages.put("mosaic_yellow", loadImage("mosaic_yellow.png", 70, 70));
+
+            tileImages.put("caryatid", loadImage("caryatid.png", 70, 70));
+            tileImages.put("sphinx", loadImage("sphinx.png", 70, 70));
+
+            tileImages.put("skeleton_big_top", loadImage("skeleton_big_top.png", 70, 70));
+            tileImages.put("skeleton_big_bottom", loadImage("skeleton_big_bottom.png", 70, 70));
+            tileImages.put("skeleton_small_top", loadImage("skeleton_small_top.png", 70, 70));
+            tileImages.put("skeleton_small_bottom", loadImage("skeleton_small_bottom.png", 70, 70));
+
+            tileImages.put("landslide", loadImage("landslide.png", 50, 50));
+            tileImages.put("tile_back", loadImage("tile_back.png", 70, 70));
+
+            characterImages.put("archaeologist", loadImage("archaeologist.png", 120, 160));
+            characterImages.put("assistant", loadImage("assistant.png", 120, 160));
+            characterImages.put("professor", loadImage("professor.png", 120, 160));
+            characterImages.put("digger", loadImage("digger.png", 120, 160));
+            characterImages.put("coder", loadImage("coder.PNG", 120, 160));
+
+            backgroundImage = loadImageOriginal("background.png");
+
+
+
+            int nullCount = 0;
+            for (Map.Entry<String, ImageIcon> entry : tileImages.entrySet()) {
+                if (entry.getValue() == null) {
+
+                    nullCount++;
+                }
+            }
+
+        } catch (IOException e) {
+            System.err.println("Error loading images: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    private ImageIcon loadImage(String filename, int width, int height) throws IOException {
+        File file = new File(IMAGE_PATH + filename);
+
+
+
+        if (file.exists()) {
+            Image image = ImageIO.read(file);
+            Image scaled = image.getScaledInstance(width, height, Image.SCALE_SMOOTH);
+            return new ImageIcon(scaled);
+        } else {
+
+        }
+        return null;
+    }
+
+    private ImageIcon loadImageOriginal(String filename) throws IOException {
+        File file = new File(IMAGE_PATH + filename);
+        if (file.exists()) {
+            Image image = ImageIO.read(file);
+            return new ImageIcon(image);
+        }
+        return null;
+    }
+
+    /**
+     * initialazations of th ui
+     */
+    private void initializeUI() {
+        setTitle("Amphipolis - Archaeological Game");
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
+        JPanel mainPanel = new JPanel(new BorderLayout()) {
+            @Override
+            protected void paintComponent(Graphics g) {
+                super.paintComponent(g);
+                if (backgroundImage != null) {
+                    g.drawImage(backgroundImage.getImage(), 0, 0, getWidth(), getHeight(), this);
+                }
+            }
+        };
+
+        JPanel topBar = new JPanel(new BorderLayout());
+        topBar.setOpaque(false);
+        topBar.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
+
+        currentPlayerLabel = new JLabel("Current Player:", SwingConstants.LEFT);
+        currentPlayerLabel.setFont(new Font("Serif", Font.BOLD, 18));
+        currentPlayerLabel.setForeground(new Color(255, 255, 255));
+
+        messageLabel = new JLabel("", SwingConstants.RIGHT);
+        messageLabel.setFont(new Font("Serif", Font.PLAIN, 14));
+        messageLabel.setForeground(new Color(255, 255, 255));
+
+        topBar.add(currentPlayerLabel, BorderLayout.WEST);
+        topBar.add(messageLabel, BorderLayout.EAST);
+        mainPanel.add(topBar, BorderLayout.NORTH);
+
+        boardPanel = createGameBoard();
+
+        JPanel centerContainer = new JPanel(new BorderLayout());
+        centerContainer.setOpaque(false);
+        centerContainer.add(boardPanel, BorderLayout.CENTER);
+
+        mainPanel.add(centerContainer, BorderLayout.CENTER);
+
+        JPanel rightPanel = new JPanel(new BorderLayout());
+        rightPanel.setOpaque(false);
+        rightPanel.setBorder(BorderFactory.createEmptyBorder(20, 10, 20, 20));
+        rightPanel.setPreferredSize(new Dimension(220, 0));
+
+        currentPlayerInfoPanel = createPlayerInfoPanel();
+        rightPanel.add(currentPlayerInfoPanel, BorderLayout.NORTH);
+
+        mainPanel.add(rightPanel, BorderLayout.EAST);
+
+        JPanel bottomPanel = new JPanel(new BorderLayout());
+        bottomPanel.setOpaque(false);
+        bottomPanel.setBorder(BorderFactory.createEmptyBorder(10, 20, 20, 20));
+
+        JPanel controlPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 10));
+        controlPanel.setOpaque(false);
+
+        JButton drawButton = createStyledButton("Draw 4 Tiles");
+        drawButton.addActionListener(e -> handleDrawTiles());
+
+        JButton endTurnButton = createStyledButton("End Turn");
+        endTurnButton.addActionListener(e -> handleEndTurn());
+
+        controlPanel.add(drawButton);
+        controlPanel.add(endTurnButton);
+
+        bottomPanel.add(controlPanel, BorderLayout.SOUTH);
+        mainPanel.add(bottomPanel, BorderLayout.SOUTH);
+
+        setContentPane(mainPanel);
+        setSize(1400, 900);
+        setLocationRelativeTo(null);
+    }
+
+    private JButton createStyledButton(String text) {
+        JButton button = new JButton(text);
+        button.setBackground(new Color(139, 115, 85));
+        button.setForeground(Color.WHITE);
+        button.setFont(new Font("Serif", Font.BOLD, 14));
+        button.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(new Color(90, 75, 55), 2),
+                BorderFactory.createEmptyBorder(12, 25, 12, 25)
+        ));
+        button.setFocusPainted(false);
+        button.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        return button;
+    }
+
+    private JPanel createGameBoard() {
+        JPanel board = new JPanel(new GridBagLayout());
+        board.setOpaque(false);
+        board.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.fill = GridBagConstraints.BOTH;
+        gbc.weightx = 1.0;
+        gbc.weighty = 1.0;
+
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.insets = new Insets(0, 0, 10, 10);
+        topLeftArea = createAreaPanel("MOSAIC AREA", new Color(144, 238, 144, 180));
+        board.add(topLeftArea, gbc);
+
+        gbc.gridx = 1;
+        gbc.gridy = 0;
+        gbc.insets = new Insets(0, 10, 10, 0);
+        topRightArea = createAreaPanel("STATUE AREA", new Color(210, 180, 140, 200));
+        board.add(topRightArea, gbc);
+
+        gbc.gridx = 0;
+        gbc.gridy = 1;
+        gbc.gridwidth = 2;
+        gbc.weightx = 2.0;
+        gbc.weighty = 1.2;
+        gbc.insets = new Insets(10, 50, 10, 50);
+        centerArea = createLandslideArea();
+        board.add(centerArea, gbc);
+
+        gbc.gridwidth = 1;
+        gbc.weightx = 1.0;
+        gbc.weighty = 1.0;
+        gbc.gridx = 0;
+        gbc.gridy = 2;
+        gbc.insets = new Insets(10, 0, 0, 10);
+        bottomLeftArea = createAreaPanel("AMPHORA AREA", new Color(135, 206, 235, 180));
+        board.add(bottomLeftArea, gbc);
+
+        gbc.gridx = 1;
+        gbc.gridy = 2;
+        gbc.insets = new Insets(10, 10, 0, 0);
+        bottomRightArea = createAreaPanel("SKELETON AREA", new Color(205, 133, 63, 200));
+        board.add(bottomRightArea, gbc);
+
+        return board;
+    }
+
+    private JPanel createAreaPanel(String title, Color bgColor) {
+        JPanel panel = new JPanel(new BorderLayout());
+        panel.setBackground(bgColor);
+        panel.setBorder(BorderFactory.createLineBorder(new Color(101, 67, 33), 3));
+        panel.setPreferredSize(new Dimension(320, 200));
+
+        JLabel titleLabel = new JLabel(title, SwingConstants.CENTER);
+        titleLabel.setFont(new Font("Serif", Font.BOLD, 16));
+        titleLabel.setForeground(new Color(50, 25, 0));
+        titleLabel.setBorder(BorderFactory.createEmptyBorder(8, 0, 8, 0));
+        panel.add(titleLabel, BorderLayout.NORTH);
+
+        JPanel tileGrid = new JPanel(new GridLayout(2, 4, 5, 5));
+        tileGrid.setOpaque(false);
+        tileGrid.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+
+        for (int i = 0; i < 8; i++) {
+            JLabel tileSlot = new JLabel("", SwingConstants.CENTER);
+            tileSlot.setOpaque(true);
+            tileSlot.setBackground(new Color(255, 255, 255, 100));
+            tileSlot.setBorder(BorderFactory.createLineBorder(new Color(139, 115, 85), 2));
+            tileSlot.setPreferredSize(new Dimension(70, 70));
+            tileGrid.add(tileSlot);
+        }
+
+        panel.add(tileGrid, BorderLayout.CENTER);
+        return panel;
+    }
+
+    private JPanel createLandslideArea() {
+        JPanel panel = new JPanel(new BorderLayout());
+        panel.setBackground(new Color(80, 70, 60, 200));
+        panel.setBorder(BorderFactory.createLineBorder(new Color(50, 40, 30), 4));
+        panel.setPreferredSize(new Dimension(320, 280));
+
+        JLabel titleLabel = new JLabel("LANDSLIDE AREA", SwingConstants.CENTER);
+        titleLabel.setFont(new Font("Serif", Font.BOLD, 18));
+        titleLabel.setForeground(Color.WHITE);
+        titleLabel.setBorder(BorderFactory.createEmptyBorder(10, 0, 10, 0));
+        panel.add(titleLabel, BorderLayout.NORTH);
+
+        JPanel grid = new JPanel(new GridLayout(4, 4, 3, 3));
+        grid.setOpaque(false);
+        grid.setBorder(BorderFactory.createEmptyBorder(10, 15, 10, 15));
+
+        for (int i = 0; i < 16; i++) {
+            JLabel slot = new JLabel("", SwingConstants.CENTER);
+            slot.setOpaque(true);
+            slot.setBackground(new Color(100, 90, 80));
+            slot.setBorder(BorderFactory.createLineBorder(new Color(70, 60, 50), 2));
+            slot.setPreferredSize(new Dimension(60, 60));
+            grid.add(slot);
+        }
+
+        panel.add(grid, BorderLayout.CENTER);
+        return panel;
+    }
+
+    private JPanel createPlayerInfoPanel() {
+        JPanel panel = new JPanel(new BorderLayout());
+        panel.setBackground(new Color(255, 255, 200, 200));
+        panel.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(new Color(139, 115, 85), 3),
+                BorderFactory.createEmptyBorder(10, 10, 10, 10)
+        ));
+        panel.setPreferredSize(new Dimension(180, 100));
+
+        JLabel teamLabel = new JLabel("Player 1", SwingConstants.CENTER);
+        teamLabel.setFont(new Font("Serif", Font.BOLD, 16));
+        teamLabel.setForeground(new Color(184, 134, 11));
+
+        JLabel scoreLabel = new JLabel("Score: 0", SwingConstants.CENTER);
+        scoreLabel.setFont(new Font("Serif", Font.BOLD, 14));
+        scoreLabel.setForeground(new Color(139, 69, 19));
+
+        JPanel infoPanel = new JPanel(new GridLayout(2, 1, 0, 5));
+        infoPanel.setOpaque(false);
+        infoPanel.add(teamLabel);
+        infoPanel.add(scoreLabel);
+
+        panel.add(infoPanel, BorderLayout.CENTER);
+        return panel;
+    }
+
+    private JPanel createCharacterCardsVertical() {
+        JPanel panel = new JPanel();
+        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+        panel.setOpaque(false);
+        panel.setBorder(BorderFactory.createTitledBorder(
+                BorderFactory.createLineBorder(new Color(139, 115, 85), 2),
+                "Use Character",
+                TitledBorder.CENTER,
+                TitledBorder.TOP,
+                new Font("Serif", Font.BOLD, 12),
+                Color.WHITE
+        ));
+
+        String[] cardNames = {"assistant", "archaeologist", "digger", "professor", "coder"};
+        String[] displayNames = {"Assistant", "Archaeologist", "Excavator", "Professor", "Programmer"};
+
+        for (int i = 0; i < cardNames.length; i++) {
+            JButton cardButton = new JButton();
+
+            ImageIcon cardIcon = characterImages.get(cardNames[i]);
+            if (cardIcon != null) {
+                Image scaled = cardIcon.getImage().getScaledInstance(100, 140, Image.SCALE_SMOOTH);
+                cardButton.setIcon(new ImageIcon(scaled));
+            } else {
+                cardButton.setText(displayNames[i]);
+            }
+
+            cardButton.setPreferredSize(new Dimension(120, 150));
+            cardButton.setMaximumSize(new Dimension(120, 150));
+            cardButton.setBackground(new Color(245, 222, 179));
+            cardButton.setBorder(BorderFactory.createLineBorder(new Color(139, 115, 85), 2));
+            cardButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
+            cardButton.setToolTipText(displayNames[i]);
+            cardButton.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+            final String displayName = displayNames[i];
+            cardButton.addActionListener(e -> handleUseCard(displayName));
+
+            panel.add(cardButton);
+            if (i < cardNames.length - 1) {
+                panel.add(Box.createRigidArea(new Dimension(0, 8)));
+            }
+        }
+
+        return panel;
+    }
+
+    /**
+     * handles the tile drawing
+     */
+    private void handleDrawTiles() {
+
+        if (gameController != null) {
+
+            gameController.handleDrawTiles();
+        } else {
+
+            showMessage("Game controller not initialized!");
+        }
+    }
+
+
+    /**
+     * handles the tile drawing
+     */
+    private void handleEndTurn() {
+        if (gameController != null) {
+            gameController.handleEndTurn();
+        } else {
+            showMessage("Game controller not initialized!");
+        }
+    }
+
+    /**
+     * handles the tile drawing
+     */
+    private void handleUseCard(String cardName) {
+        if (gameController != null) {
+            gameController.handleCharacterPower(cardName);
+        } else {
+            showMessage("Game controller not initialized!");
+        }
+    }
+
+    /**
+     * gets called to update the areas in the ui
+     * @param areaType
+     * @param tiles
+     */
+    public void updateAreaTiles(String areaType, List<Tile> tiles) {
+
+
+        JPanel targetArea = switch (areaType.toLowerCase()) {
+            case "mosaic" -> topLeftArea;
+            case "statue" -> topRightArea;
+            case "skeleton" -> bottomRightArea;
+            case "amphora" -> bottomLeftArea;
+            case "landslide" -> centerArea;
+            default -> null;
+        };
+
+        if (targetArea != null) {
+
+            Component[] components = targetArea.getComponents();
+
+
+            for (Component comp : components) {
+
+                if (comp instanceof JPanel) {
+                    JPanel grid = (JPanel) comp;
+                    Component[] slots = grid.getComponents();
+
+
+                    for (int i = 0; i < slots.length; i++) {
+                        if (slots[i] instanceof JLabel) {
+                            JLabel slot = (JLabel) slots[i];
+
+                            if (i < tiles.size()) {
+                                Tile tile = tiles.get(i);
+
+
+                                try {
+                                    ImageIcon tileIcon = getTileImageForTile(tile);
+
+                                    if (tileIcon != null) {
+                                        slot.setIcon(tileIcon);
+                                        slot.setText("");
+
+                                    } else {
+
+                                    }
+                                } catch (Exception e) {
+
+                                    e.printStackTrace();
+                                }
+                            } else {
+                                slot.setIcon(null);
+                                slot.setText("");
+                            }
+                        }
+                    }
+                    break;
+                }
+            }
+            targetArea.revalidate();
+            targetArea.repaint();
+        } else {
+
+        }
+    }
+
+    /**
+     * choses the images that the ui displays , they are stored locally
+     *
+     * @param tile
+     * @return
+     */
+    private ImageIcon getTileImageForTile(Tile tile) {
+        String colour = tile.getColour();
+
+        if (tile instanceof MosaicT) {
+            return tileImages.get("mosaic_" + colour);
+        } else if (tile instanceof StatueT) {
+            return tileImages.get(colour);
+        } else if (tile instanceof SkeletonT) {
+            String skeletonKey;
+            if (colour.contains("adult_top")) {
+                skeletonKey = "skeleton_big_top";
+            } else if (colour.contains("adult_bottom")) {
+                skeletonKey = "skeleton_big_bottom";
+            } else if (colour.contains("child_top")) {
+                skeletonKey = "skeleton_small_top";
+            } else if (colour.contains("child_bottom")) {
+                skeletonKey = "skeleton_small_bottom";
+            } else {
+                skeletonKey = "skeleton_big_top";
+            }
+            return tileImages.get(skeletonKey);
+        } else if (tile instanceof AmphoraT) {
+            return tileImages.get("amphora_" + colour);
+        } else if (tile instanceof LandslideT) {
+            return tileImages.get("landslide");
+        }
+
+        return tileImages.get("tile_back");
+    }
+
+    /**
+     * creates the side windoq
+     */
+    private void createCharacterCardsWindow() {
+        characterCardsWindow = new JFrame("Character Cards");
+        characterCardsWindow.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+
+        JPanel mainPanel = new JPanel(new BorderLayout()) {
+            @Override
+            protected void paintComponent(Graphics g) {
+                super.paintComponent(g);
+                if (backgroundImage != null) {
+                    g.drawImage(backgroundImage.getImage(), 0, 0, getWidth(), getHeight(), this);
+                }
+            }
+        };
+
+        JLabel titleLabel = new JLabel("Use Character", SwingConstants.CENTER);
+        titleLabel.setFont(new Font("Serif", Font.BOLD, 18));
+        titleLabel.setForeground(Color.WHITE);
+        titleLabel.setBorder(BorderFactory.createEmptyBorder(15, 10, 15, 10));
+        mainPanel.add(titleLabel, BorderLayout.NORTH);
+
+        JPanel cardsPanel = new JPanel();
+        cardsPanel.setLayout(new BoxLayout(cardsPanel, BoxLayout.Y_AXIS));
+        cardsPanel.setOpaque(false);
+        cardsPanel.setBorder(BorderFactory.createEmptyBorder(10, 15, 10, 15));
+
+        String[] cardNames = {"assistant", "archaeologist", "digger", "professor", "coder"};
+        String[] displayNames = {"Assistant", "Archaeologist", "Excavator", "Professor", "Programmer"};
+
+        for (int i = 0; i < cardNames.length; i++) {
+            JButton cardButton = new JButton();
+
+            ImageIcon cardIcon = characterImages.get(cardNames[i]);
+            if (cardIcon != null) {
+                Image scaled = cardIcon.getImage().getScaledInstance(140, 200, Image.SCALE_SMOOTH);
+                cardButton.setIcon(new ImageIcon(scaled));
+            } else {
+                cardButton.setText(displayNames[i]);
+                cardButton.setFont(new Font("Serif", Font.BOLD, 14));
+            }
+
+            cardButton.setPreferredSize(new Dimension(160, 220));
+            cardButton.setMaximumSize(new Dimension(160, 220));
+            cardButton.setBackground(new Color(245, 222, 179));
+            cardButton.setBorder(BorderFactory.createLineBorder(new Color(139, 115, 85), 3));
+            cardButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
+            cardButton.setToolTipText(displayNames[i]);
+            cardButton.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+            final String displayName = displayNames[i];
+            cardButton.addActionListener(e -> handleUseCard(displayName));
+
+            cardsPanel.add(cardButton);
+            if (i < cardNames.length - 1) {
+                cardsPanel.add(Box.createRigidArea(new Dimension(0, 12)));
+            }
+        }
+
+        JScrollPane scrollPane = new JScrollPane(cardsPanel);
+        scrollPane.setOpaque(false);
+        scrollPane.getViewport().setOpaque(false);
+        scrollPane.setBorder(null);
+        mainPanel.add(scrollPane, BorderLayout.CENTER);
+
+        characterCardsWindow.setContentPane(mainPanel);
+        characterCardsWindow.setSize(200, 900);
+        characterCardsWindow.setResizable(false);
+    }
+
+    /**
+     *
+     */
+    public void initializeDisplay() {
+        setVisible(true);
+
+        Point mainLocation = getLocation();
+        int mainWidth = getWidth();
+        characterCardsWindow.setLocation(mainLocation.x + mainWidth, mainLocation.y);
+        characterCardsWindow.setVisible(true);
+
+        showMessage("Game initialized. Archaeological excavation ready!");
+    }
+
+    /**
+     * updates the entire display based on the current state of the game
+     *
+     * @param engine the current instance of the GameEngine
+
+     * @pre engine is not null and is initialized
+     *
+     * @post the game board, areas, player inventories, and scores are visually updated
+     */
+    public void displayGameState(GameEngine engine) {
+        if (engine == null) return;
+        updatePlayerInfo(engine);
+        updateGameInfo(engine);
+    }
+
+    private void updatePlayerInfo(GameEngine engine) {
+        Player current = engine.getCurrentPlayer();
+        if (current != null) {
+            int playerNumber = getPlayerNumber(current.getColor());
+            int score = current.calculateScore();
+
+
+
+            Component[] components = currentPlayerInfoPanel.getComponents();
+
+
+            for (Component comp : components) {
+                if (comp instanceof JPanel) {
+                    JPanel infoPanel = (JPanel) comp;
+                    Component[] labels = infoPanel.getComponents();
+
+
+                    if (labels.length >= 2) {
+                        if (labels[0] instanceof JLabel) {
+                            ((JLabel) labels[0]).setText("Player " + playerNumber);
+
+                        }
+                        if (labels[1] instanceof JLabel) {
+                            ((JLabel) labels[1]).setText("Score: " + score);
+
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private void updateGameInfo(GameEngine engine) {
+        if (gameInfoArea == null) return;
+
+        StringBuilder info = new StringBuilder();
+
+        for (Player player : engine.getPlayers()) {
+            int score = player.calculateScore();
+            info.append("Team ").append(player.getColor())
+                    .append(": ").append(score).append(" points\n");
+        }
+
+        gameInfoArea.setText(info.toString());
+    }
+
+    /**
+     * displays a message to the user, such as warnings, turn indications, or game results
+     *
+     * @param message the string content to be displayed
+
+     * @pre message is not null or empty
+
+     * @post the message is shown prominently in the user interface
+     */
+    public void showMessage(String message) {
+        if (messageLabel != null) {
+            messageLabel.setText(message);
+        }
+        if (gameInfoArea != null) {
+            gameInfoArea.append("\n> " + message);
+        }
+    }
+
+    public void showWinner(String playerColor, int score) {
+        int playerNumber = getPlayerNumber(playerColor);
+        String message = "WINNER: Player " + playerNumber + " with " + score + " points!! WELL DONE";
+        JOptionPane.showMessageDialog(this, message, "Game Over", JOptionPane.INFORMATION_MESSAGE);
+        showMessage(message);
+    }
+
+    /**
+     * uses enum to handle the
+     * @param playerColor
+     */
+    public void updatePlayerTurn(String playerColor) {
+
+        int playerNumber = getPlayerNumber(playerColor);
+
+
+        if (currentPlayerLabel != null) {
+            String oldText = currentPlayerLabel.getText();
+            currentPlayerLabel.setText("current Player: Player " + playerNumber);
+
+        }
+        playMusicForPlayer(playerColor);
+        showMessage("Player " + playerNumber + "'s turn");
+    }
+
+    private void playMusicForPlayer(String playerColor) {
+        int playerNumber = getPlayerNumber(playerColor);
+        String musicFile = "Player" + playerNumber + ".flac";
+
+        try {
+            Desktop dt = Desktop.getDesktop();
+            File file = new File(MUSIC_PATH + musicFile);
+
+            if (file.exists()) {
+                dt.open(file);
+                System.out.println("playing: " + musicFile);
+            } else {
+                System.out.println("file not found: " + file.getAbsolutePath());
+            }
+        } catch (Exception e) {
+            System.err.println("error " + e.getMessage());
+        }
+    }
+
+    private int getPlayerNumber(String color) {
+        try {
+            return Integer.parseInt(color);
+        } catch (NumberFormatException e) {
+            return 1;
+        }
+    }
+
+    public void updateGameState(Object gameState) {
+    }
+
+//    /**
+//     * highlights the current player and updates the display to show whose turn it is
+//     *
+//     * @param currentPlayer the player whose turn it is
+//     *
+//     * @pre currentPlayer is not null
+//     *
+//     * @post the visual elements indicating the current turn are updated
+//     */
+//    public void highlightCurrentPlayer(Player currentPlayer) {
+//        if (currentPlayer != null) {
+//            updatePlayerTurn(currentPlayer.getColor());
+//        }
+//    }
+//
+//    }
+
+
+
+
+}

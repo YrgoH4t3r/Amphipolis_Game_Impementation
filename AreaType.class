@@ -1,0 +1,115 @@
+package Test;
+
+import Model.*;
+import org.junit.Test;
+import org.junit.Before;
+import static org.junit.Assert.*;
+import java.util.ArrayList;
+import java.util.List;
+
+public class PlayerTest {
+
+    @Test
+    public void testPlayerCreation() {
+        Player player = new Player("1");
+        assertNotNull(player);
+        assertEquals("1", player.getColor());
+    }
+
+    @Test
+    public void testInitialScoreIsZero() {
+        Player player = new Player("1");
+        assertEquals(0, player.calculateScore());
+    }
+
+    @Test
+    public void testMosaicSameColorScoring() {
+        Player player = new Player("1");
+        List<Tile> tiles = new ArrayList<>();
+        for (int i = 0; i < 4; i++) {
+            tiles.add(new MosaicT(new SimpleTile("green")));
+        }
+        player.addTiles(tiles);
+        assertEquals(4, player.calculateScore());
+    }
+
+    @Test
+    public void testMosaicDifferentColorScoring() {
+        Player player = new Player("1");
+        List<Tile> tiles = new ArrayList<>();
+        tiles.add(new MosaicT(new SimpleTile("green")));
+        tiles.add(new MosaicT(new SimpleTile("red")));
+        tiles.add(new MosaicT(new SimpleTile("yellow")));
+        tiles.add(new MosaicT(new SimpleTile("green")));
+        player.addTiles(tiles);
+        assertEquals(2, player.calculateScore());
+    }
+
+    @Test
+    public void testIncompleteMosaicScoring() {
+        Player player = new Player("1");
+        List<Tile> tiles = new ArrayList<>();
+        for (int i = 0; i < 3; i++) {
+            tiles.add(new MosaicT(new SimpleTile("green")));
+        }
+        player.addTiles(tiles);
+        assertEquals(0, player.calculateScore());
+    }
+
+    @Test
+    public void testCompleteSkeletonScoring() {
+        Player player = new Player("1");
+        List<Tile> tiles = new ArrayList<>();
+        tiles.add(new SkeletonT(new SimpleTile("adult_top")));
+        tiles.add(new SkeletonT(new SimpleTile("adult_bottom")));
+        player.addTiles(tiles);
+        assertEquals(1, player.calculateScore());
+    }
+
+    @Test
+    public void testFamilySkeletonScoring() {
+        Player player = new Player("1");
+        List<Tile> tiles = new ArrayList<>();
+        tiles.add(new SkeletonT(new SimpleTile("adult_top")));
+        tiles.add(new SkeletonT(new SimpleTile("adult_bottom")));
+        tiles.add(new SkeletonT(new SimpleTile("adult_top")));
+        tiles.add(new SkeletonT(new SimpleTile("adult_bottom")));
+        tiles.add(new SkeletonT(new SimpleTile("child_top")));
+        tiles.add(new SkeletonT(new SimpleTile("child_bottom")));
+        player.addTiles(tiles);
+        assertEquals(6, player.calculateScore());
+    }
+
+    @Test
+    public void testAmphoraThreeColorsScoring() {
+        Player player = new Player("1");
+        List<Tile> tiles = new ArrayList<>();
+        tiles.add(new AmphoraT(new SimpleTile("blue")));
+        tiles.add(new AmphoraT(new SimpleTile("red")));
+        tiles.add(new AmphoraT(new SimpleTile("green")));
+        player.addTiles(tiles);
+        assertEquals(1, player.calculateScore());
+    }
+
+    @Test
+    public void testAmphoraSixColorsScoring() {
+        Player player = new Player("1");
+        List<Tile> tiles = new ArrayList<>();
+        tiles.add(new AmphoraT(new SimpleTile("blue")));
+        tiles.add(new AmphoraT(new SimpleTile("red")));
+        tiles.add(new AmphoraT(new SimpleTile("green")));
+        tiles.add(new AmphoraT(new SimpleTile("yellow")));
+        tiles.add(new AmphoraT(new SimpleTile("purple")));
+        tiles.add(new AmphoraT(new SimpleTile("brown")));
+        player.addTiles(tiles);
+        assertEquals(6, player.calculateScore());
+    }
+
+    @Test
+    public void testCardUsageTracking() {
+        Player player = new Player("1");
+        assertFalse(player.isCardUsed("Assistant"));
+        player.markCardAsUsed("Assistant");
+        assertTrue(player.isCardUsed("Assistant"));
+    }
+}
